@@ -1,6 +1,6 @@
 const DB_NAME = "FrenchTrainerV1";
-const DB_VERSION = 2;
-const DATASET_VERSION = 2;
+const DB_VERSION = 3;
+const DATASET_VERSION = 3;
 const WORD_STORE = "words";
 const META_STORE = "meta";
 
@@ -24,6 +24,7 @@ function makeSeedWords() {
     repetitions: 0,
     correct: 0,
     incorrect: 0,
+    learnProgress: 0,
     lastReview: null,
     nextReview: null
   }));
@@ -51,6 +52,16 @@ async function initDB() {
   const storedState = await reqToPromise(db.transaction(META_STORE,"readonly").objectStore(META_STORE).get("state"));
   if (storedState?.value) state = storedState.value;
 
+  // V1.2: each word has a fixed learning goal of 10 correct answers.
+  // Existing progress is preserved by converting previous correct answers to 0-10.
+  let progressMigrationNeeded = false;
+  for (const w of storedWords) {
+    if (typeof w.learnProgress !== "number") {
+      w.learnProgress = Math.min(10, Math.max(0, w.correct || 0));
+      progressMigrationNeeded = true;
+    }
+  }
+
   const currentDataset = state.datasetVersion || 1;
   if (!storedWords.length) {
     words = makeSeedWords();
@@ -66,6 +77,11 @@ async function initDB() {
     await saveState();
   } else {
     words = storedWords;
+    if (progressMigrationNeeded) {
+      state.datasetVersion = DATASET_VERSION;
+      await saveAllWords();
+      await saveState();
+    }
   }
   updateUI();
 }
@@ -100,7 +116,7 @@ function allCorrect() { return words.reduce((a,w)=>a+w.correct,0); }
 function allIncorrect() { return words.reduce((a,w)=>a+w.incorrect,0); }
 
 function updateUI() {
-  const learned = words.filter(w=>w.status==="mastered").length;
+  const learned = words.filter(w=>(w.learnProgress || 0) >= 10).length;
   const due = words.filter(w=>isDue(w) && w.repetitions>0).length;
   document.getElementById("learnedCount").textContent = learned;
   document.getElementById("overallProgress").style.width = `${Math.min(100, learned/Math.max(words.length,1)*100)}%`;
@@ -129,14 +145,14 @@ function renderVocabulary() {
   document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{currentFilter=b.dataset.cat;renderVocabulary();});
   const list = words.filter(w => (currentFilter==="Todas" || w.category===currentFilter) && (!q || `${w.word} ${w.translation}`.toLowerCase().includes(q)));
   document.getElementById("vocabularyList").innerHTML = list.map(w=>{
-    const attempts = (w.correct||0) + (w.incorrect||0);
-    const accuracy = attempts ? Math.round((w.correct||0) / attempts * 100) : 0;
+    const learnProgress = Math.min(10, Math.max(0, w.learnProgress || 0));
+    const progressPct = learnProgress * 10;
     return `<div class="word">
       <div class="word-main">
         <div><strong>${escapeHtml(w.word)}</strong><small>${escapeHtml(w.translation)}</small></div>
-        <div class="word-meta"><span class="status status-${escapeHtml(w.status)}">${statusLabel(w.status)}</span><span class="word-score">${w.correct||0}/${attempts}</span></div>
+        <div class="word-meta"><span class="status status-${escapeHtml(w.status)}">${statusLabel(w.status)}</span><span class="word-score">${learnProgress}/10</span></div>
       </div>
-      <div class="word-progress" title="${accuracy}% de acierto"><div style="width:${accuracy}%"></div></div>
+      <div class="word-progress" title="Progreso de aprendizaje: ${learnProgress}/10"><div style="width:${progressPct}%"></div></div>
     </div>`;
   }).join("") || `<div class="card muted">No hay palabras que coincidan.</div>`;
 }
@@ -192,14 +208,22 @@ async function answer(given, correct) {
   const w=currentExercise.word;
   const isCorrect=normalize(given)===normalize(correct);
   w.repetitions++;
-  if(isCorrect) w.correct++; else w.incorrect++;
+  if(isCorrect) {
+    w.correct++;
+    w.learnProgress = Math.min(10, (w.learnProgress || 0) + 1);
+  } else {
+    w.incorrect++;
+  }
 
   document.querySelectorAll(".option, #checkAnswer").forEach(el => el.disabled = true);
   const now=new Date();
-  if(isCorrect){
-    w.status = w.repetitions>=5 ? "mastered" : w.repetitions>=2 ? "familiar" : "learning";
-    const intervals=[1,3,7,14,30,60];
-    const days=intervals[Math.min(w.repetitions-1,intervals.length-1)];
+  if((w.learnProgress || 0) >= 10){
+    w.status = "mastered";
+    w.nextReview = new Date(now.getTime()+30*86400000).toISOString();
+  } else if(isCorrect){
+    w.status = (w.learnProgress || 0) >= 5 ? "familiar" : "learning";
+    const intervals=[1,1,2,3,5,7,10,14,21,30];
+    const days=intervals[Math.min((w.learnProgress || 1)-1, intervals.length-1)];
     w.nextReview=new Date(now.getTime()+days*86400000).toISOString();
   } else {
     w.status="learning";
@@ -211,8 +235,8 @@ async function answer(given, correct) {
   fb.className = `feedback ${isCorrect ? "feedback-correct" : "feedback-wrong"}`;
   fb.classList.remove("hidden");
   fb.innerHTML=isCorrect
-    ? `<span class="feedback-icon">✓</span><strong>Correcto</strong><small>${w.correct}/${w.correct+w.incorrect} aciertos</small>`
-    : `<span class="feedback-icon">✕</span><strong>Incorrecto</strong><small>Respuesta: <b>${escapeHtml(correct)}</b></small>`;
+    ? `<span class="feedback-icon">✓</span><strong>Correcto</strong><small>Progreso de esta palabra: ${Math.min(10, w.learnProgress || 0)}/10</small>`
+    : `<span class="feedback-icon">✕</span><strong>Incorrecto</strong><small>Progreso de esta palabra: ${Math.min(10, w.learnProgress || 0)}/10 · Respuesta: <b>${escapeHtml(correct)}</b></small>`;
   setTimeout(()=>{currentIndex++;renderExercise();},1000);
 }
 
@@ -253,7 +277,12 @@ async function importBackup(file){
   try{
     const data=JSON.parse(await file.text());
     if(!Array.isArray(data.words)) throw new Error("Formato no válido");
-    words=data.words; state=data.state||state;
+    words=data.words.map(w=>({
+      ...w,
+      learnProgress: typeof w.learnProgress === "number" ? Math.min(10, Math.max(0, w.learnProgress)) : Math.min(10, Math.max(0, w.correct || 0))
+    }));
+    state=data.state||state;
+    state.datasetVersion = DATASET_VERSION;
     await saveAllWords(); await saveState(); updateUI(); alert("Backup restaurado correctamente.");
   }catch(e){alert("No se pudo importar el backup: "+e.message);}
 }
@@ -269,7 +298,7 @@ async function importCSV(file){
   for(const line of lines){
     const cols=line.split(",").map(x=>x.trim());
     if(!cols[wi]||!cols[ti]) continue;
-    const word={id:"csv-"+crypto.randomUUID(),word:cols[wi],translation:cols[ti],category:ci>=0?(cols[ci]||"Importado"):"Importado",status:"new",recognition:0,production:0,repetitions:0,correct:0,incorrect:0,lastReview:null,nextReview:null};
+    const word={id:"csv-"+crypto.randomUUID(),word:cols[wi],translation:cols[ti],category:ci>=0?(cols[ci]||"Importado"):"Importado",status:"new",recognition:0,production:0,repetitions:0,correct:0,incorrect:0,lastReview:null,nextReview:null,learnProgress:0};
     words.push(word);added++;
   }
   await saveAllWords(); updateUI(); renderVocabulary(); alert(`Se han importado ${added} palabras.`);
@@ -286,7 +315,7 @@ document.getElementById("backupInput").onchange=e=>e.target.files[0]&&importBack
 document.getElementById("csvInput").onchange=e=>e.target.files[0]&&importCSV(e.target.files[0]);
 document.getElementById("resetBtn").onclick=async()=>{
   if(confirm("¿Borrar todo el progreso? Tus palabras se conservarán.")){
-    words.forEach(w=>{w.status="new";w.repetitions=0;w.correct=0;w.incorrect=0;w.lastReview=null;w.nextReview=null;});
+    words.forEach(w=>{w.status="new";w.repetitions=0;w.correct=0;w.incorrect=0;w.learnProgress=0;w.lastReview=null;w.nextReview=null;});
     state.sessions=[]; state.datasetVersion=DATASET_VERSION; await saveAllWords();await saveState();updateUI();renderVocabulary();alert("Progreso borrado.");
   }
 };

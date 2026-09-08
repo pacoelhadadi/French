@@ -24,3 +24,4 @@ Al abrir esta versión por primera vez, la aplicación sustituye automáticament
 
 IMPORTANTE
 Si ya habías estudiado palabras de la V1 anterior, sus estadísticas no se trasladan al nuevo vocabulario inicial. Haz un backup antes de actualizar si quieres conservar esos datos.
+\n\n## V1.2\n- Progreso fijo de aprendizaje por palabra: 0/10 a 10/10.\n- Cada respuesta correcta suma 1 punto hasta un máximo de 10.\n- Las respuestas incorrectas no restan progreso.\n- Al llegar a 10/10, la palabra se considera dominada.\n- Se mantiene el porcentaje de acierto global para estadísticas.\n- Icono personalizado para iPhone/Safari y manifest de aplicación web.\n
