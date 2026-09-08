@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>French Trainer V1</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">FRENCH TRAINER</p>
+        <h1>🇫🇷 Aprende francés</h1>
+      </div>
+      <button id="backupBtn" class="icon-btn" title="Exportar backup">↥</button>
+    </header>
+
+    <section id="homeScreen" class="screen active">
+      <div class="hero card">
+        <p class="muted">Tu progreso</p>
+        <div class="hero-number" id="learnedCount">0</div>
+        <p>palabras aprendidas</p>
+        <div class="progress"><div id="overallProgress" class="progress-fill"></div></div>
+        <small id="progressText">0 / 1000</small>
+      </div>
+
+      <div class="stats-grid">
+        <div class="card stat"><strong id="todayStudied">0</strong><span>Estudiadas hoy</span></div>
+        <div class="card stat"><strong id="accuracy">—</strong><span>Acierto</span></div>
+        <div class="card stat"><strong id="dueCount">0</strong><span>Para repasar</span></div>
+        <div class="card stat"><strong id="streak">0</strong><span>Racha 🔥</span></div>
+      </div>
+
+      <div class="actions">
+        <button id="learnBtn" class="primary big">🎯 Aprender palabras</button>
+        <button id="reviewBtn" class="secondary big">🔄 Repasar</button>
+      </div>
+
+      <div class="card goal">
+        <div class="row between"><strong>Objetivo V1</strong><span>1000 palabras</span></div>
+        <p class="muted">Las 1000 palabras iniciales están organizadas por frecuencia aproximada y pensadas como base de vocabulario general.</p>
+      </div>
+    </section>
+
+    <section id="vocabularyScreen" class="screen">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">VOCABULARIO</p>
+          <h2>Mis palabras</h2>
+        </div>
+        <label class="import-btn">＋ Importar CSV<input id="csvInput" type="file" accept=".csv,text/csv" hidden></label>
+      </div>
+      <input id="searchInput" class="search" placeholder="🔍 Buscar palabra o traducción...">
+      <div id="categoryFilters" class="chips"></div>
+      <div id="vocabularyList" class="word-list"></div>
+    </section>
+
+    <section id="progressScreen" class="screen">
+      <p class="eyebrow">PROGRESO</p>
+      <h2>Tu evolución</h2>
+      <div class="card">
+        <div class="big-stat"><strong id="totalReviews">0</strong><span>respuestas</span></div>
+        <div class="big-stat"><strong id="masteredCount">0</strong><span>dominadas</span></div>
+        <div class="big-stat"><strong id="accuracyDetail">—</strong><span>acierto global</span></div>
+      </div>
+      <div class="card">
+        <h3>Estados</h3>
+        <div id="statusBars"></div>
+      </div>
+    </section>
+
+    <section id="settingsScreen" class="screen">
+      <p class="eyebrow">DATOS</p>
+      <h2>Configuración y backup</h2>
+      <div class="card settings">
+        <button id="exportBtn" class="secondary">⬇️ Exportar todos mis datos</button>
+        <label class="secondary file-label">⬆️ Importar backup<input id="backupInput" type="file" accept=".json,application/json" hidden></label>
+        <button id="resetBtn" class="danger">Borrar progreso</button>
+      </div>
+      <div class="card">
+        <h3>Sobre esta V1</h3>
+        <p class="muted">Tus palabras y progreso se guardan localmente en este dispositivo. No se envían a ningún servidor.</p>
+      </div>
+    </section>
+
+    <section id="exerciseScreen" class="screen">
+      <div class="exercise-top">
+        <button id="exitExercise" class="icon-btn">←</button>
+        <span id="exerciseCounter">1 / 10</span>
+        <span id="exerciseMode">Repaso</span>
+      </div>
+      <div class="progress"><div id="sessionProgress" class="progress-fill"></div></div>
+      <div id="exerciseCard" class="exercise-card card"></div>
+      <div id="feedback" class="feedback hidden"></div>
+    </section>
+
+    <nav class="bottom-nav">
+      <button data-screen="homeScreen" class="nav-item active">🏠<span>Inicio</span></button>
+      <button data-screen="vocabularyScreen" class="nav-item">📚<span>Palabras</span></button>
+      <button data-screen="progressScreen" class="nav-item">📊<span>Progreso</span></button>
+      <button data-screen="settingsScreen" class="nav-item">⚙️<span>Datos</span></button>
+    </nav>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
