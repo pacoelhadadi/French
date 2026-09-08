@@ -1,22 +1,26 @@
-# French Trainer V1
+FRENCH TRAINER V1.1
 
-Aplicación web personal para aprender vocabulario francés.
+Qué incluye esta versión
+- 1000 palabras de contenido para francés: 350 verbos, 350 sustantivos y 300 adjetivos.
+- Se han eliminado del vocabulario inicial artículos, pronombres, preposiciones, conjunciones y otros elementos puramente funcionales.
+- Las palabras están en forma de diccionario: verbos en infinitivo, sustantivos en singular y adjetivos en forma base.
+- Progreso individual visible en la lista: aciertos / intentos (por ejemplo, 1/10).
+- Barra de progreso individual por palabra.
+- Mensaje de respuesta centrado y coloreado: verde para correcto y rojo para incorrecto.
+- Se mantiene el sistema de repaso espaciado de la V1.
+- Los datos siguen guardándose localmente en IndexedDB.
+- Backup JSON e importación CSV siguen disponibles.
 
-## Qué incluye
-- Vocabulario inicial de francés.
-- Añadir/importar vocabulario mediante CSV.
-- 3 tipos de ejercicios: francés→español, español→francés y respuesta escrita.
-- Repetición espaciada sencilla.
-- Progreso y estadísticas.
-- Backup completo en JSON.
-- Restauración del backup.
-- Todo se almacena localmente en IndexedDB.
+Sobre las 1000 palabras
+La selección se ha construido como una base práctica de vocabulario de alta frecuencia y utilidad, tomando como referencia listas de frecuencia del francés y filtrando los elementos funcionales para centrarnos en verbos, sustantivos y adjetivos. No debe interpretarse como una única clasificación académica universal de "las 1000 palabras"; las listas de frecuencia cambian según corpus y criterio.
 
-## Importante
-La lista incorporada es un núcleo inicial de vocabulario y no debe considerarse una lista lingüística certificada de las "1000 palabras más frecuentes". Para una lista exacta de 1000 palabras basada en un corpus concreto, importa un CSV de 1000 entradas.
+Referencias de frecuencia consultadas
+- French Frequency List (cofinley/bosxixi), lista lematizada de frecuencia del francés.
+- Lenguia, "The 1000 Most Common French Words", basada en frecuencia del francés hablado.
+- frodonh/french-words, con POS y frecuencias de Lexique.
 
-## CSV
-Columnas esperadas:
-English,Spanish,Category
+Migración V1 -> V1.1
+Al abrir esta versión por primera vez, la aplicación sustituye automáticamente el vocabulario inicial antiguo por el nuevo conjunto de 1000 palabras. Las palabras importadas manualmente por CSV se conservan.
 
-Aunque la aplicación es de francés, se mantienen esos nombres de columna para facilitar su uso con hojas de cálculo.
+IMPORTANTE
+Si ya habías estudiado palabras de la V1 anterior, sus estadísticas no se trasladan al nuevo vocabulario inicial. Haz un backup antes de actualizar si quieres conservar esos datos.

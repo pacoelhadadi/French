@@ -1,5 +1,6 @@
 const DB_NAME = "FrenchTrainerV1";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+const DATASET_VERSION = 2;
 const WORD_STORE = "words";
 const META_STORE = "meta";
 
@@ -11,66 +12,21 @@ let currentIndex = 0;
 let currentExercise = null;
 let currentFilter = "Todas";
 
-const seed = [
-  ["de","de, desde","Función"],["la","la","Función"],["et","y","Conector"],["le","el","Función"],["les","los, las","Función"],
-  ["des","unos, unas","Función"],["à","a, en","Función"],["un","un, uno","Función"],["une","una","Función"],["en","en, dentro de","Función"],
-  ["du","del","Función"],["que","que","Conector"],["qui","quien, que","Conector"],["dans","en, dentro de","Función"],["pour","para","Función"],
-  ["pas","no","Función"],["sur","sobre, encima de","Función"],["avec","con","Función"],["ne","no","Función"],["se","se","Función"],
-  ["ce","este, esto","Demostrativos"],["il","él","Pronombre"],["elle","ella","Pronombre"],["nous","nosotros","Pronombre"],["vous","vosotros, usted","Pronombre"],
-  ["ils","ellos","Pronombre"],["elles","ellas","Pronombre"],["je","yo","Pronombre"],["tu","tú","Pronombre"],["me","me","Pronombre"],
-  ["mon","mi","Posesivos"],["ton","tu","Posesivos"],["son","su","Posesivos"],["notre","nuestro","Posesivos"],["votre","vuestro, su","Posesivos"],
-  ["leur","su, de ellos","Posesivos"],["ceci","esto","Demostrativos"],["cela","eso","Demostrativos"],["ça","eso, esto","Demostrativos"],["mais","pero","Conector"],
-  ["ou","o","Conector"],["donc","por tanto","Conector"],["car","porque","Conector"],["comme","como","Conector"],["si","si","Conector"],
-  ["oublier","olvidar","Verbos"],["être","ser, estar","Verbos"],["avoir","tener, haber","Verbos"],["faire","hacer","Verbos"],["aller","ir","Verbos"],
-  ["venir","venir","Verbos"],["pouvoir","poder","Verbos"],["devoir","deber","Verbos"],["vouloir","querer","Verbos"],["savoir","saber","Verbos"],
-  ["dire","decir","Verbos"],["voir","ver","Verbos"],["prendre","tomar, coger","Verbos"],["donner","dar","Verbos"],["mettre","poner","Verbos"],
-  ["parler","hablar","Verbos"],["aimer","amar, gustar","Verbos"],["penser","pensar","Verbos"],["trouver","encontrar","Verbos"],["passer","pasar","Verbos"],
-  ["regarder","mirar","Verbos"],["demander","preguntar, pedir","Verbos"],["répondre","responder","Verbos"],["comprendre","comprender","Verbos"],["connaître","conocer","Verbos"],
-  ["croire","creer","Verbos"],["vivre","vivir","Verbos"],["arriver","llegar, suceder","Verbos"],["partir","partir, irse","Verbos"],["sortir","salir","Verbos"],
-  ["tenir","sostener","Verbos"],["laisser","dejar","Verbos"],["rester","quedarse","Verbos"],["porter","llevar","Verbos"],["entrer","entrar","Verbos"],
-  ["travailler","trabajar","Verbos"],["écrire","escribir","Verbos"],["lire","leer","Verbos"],["boire","beber","Verbos"],["manger","comer","Verbos"],
-  ["grand","grande","Adjetivos"],["petit","pequeño","Adjetivos"],["bon","bueno","Adjetivos"],["mauvais","malo","Adjetivos"],["beau","bonito","Adjetivos"],
-  ["nouveau","nuevo","Adjetivos"],["vieux","viejo","Adjetivos"],["jeune","joven","Adjetivos"],["long","largo","Adjetivos"],["court","corto","Adjetivos"],
-  ["premier","primero","Adjetivos"],["dernier","último","Adjetivos"],["même","mismo","Adjetivos"],["autre","otro","Adjetivos"],["tout","todo","Adjetivos"],
-  ["chaque","cada","Determinantes"],["quel","qué, cuál","Interrogativos"],["quelque","algún","Determinantes"],["beaucoup","mucho","Adverbios"],["plus","más","Adverbios"],
-  ["moins","menos","Adverbios"],["très","muy","Adverbios"],["bien","bien","Adverbios"],["mal","mal","Adverbios"],["aussi","también","Adverbios"],
-  ["encore","todavía, otra vez","Adverbios"],["déjà","ya","Adverbios"],["toujours","siempre","Adverbios"],["jamais","nunca","Adverbios"],["souvent","a menudo","Adverbios"],
-  ["ici","aquí","Adverbios"],["là","ahí, allí","Adverbios"],["maintenant","ahora","Adverbios"],["aujourd'hui","hoy","Tiempo"],["demain","mañana","Tiempo"],
-  ["hier","ayer","Tiempo"],["temps","tiempo","Sustantivos"],["jour","día","Sustantivos"],["an","año","Sustantivos"],["année","año","Sustantivos"],
-  ["fois","vez","Sustantivos"],["heure","hora","Sustantivos"],["moment","momento","Sustantivos"],["homme","hombre","Sustantivos"],["femme","mujer","Sustantivos"],
-  ["enfant","niño, niña","Sustantivos"],["personne","persona","Sustantivos"],["gens","gente","Sustantivos"],["ami","amigo","Sustantivos"],["maison","casa","Sustantivos"],
-  ["ville","ciudad","Sustantivos"],["pays","país","Sustantivos"],["monde","mundo","Sustantivos"],["vie","vida","Sustantivos"],["chose","cosa","Sustantivos"],
-  ["nom","nombre","Sustantivos"],["main","mano","Sustantivos"],["tête","cabeza","Sustantivos"],["œil","ojo","Sustantivos"],["eau","agua","Sustantivos"],
-  ["pain","pan","Sustantivos"],["vin","vino","Sustantivos"],["café","café","Sustantivos"],["argent","dinero","Sustantivos"],["travail","trabajo","Sustantivos"],
-  ["école","escuela","Sustantivos"],["livre","libro","Sustantivos"],["question","pregunta","Sustantivos"],["réponse","respuesta","Sustantivos"],["problème","problema","Sustantivos"],
-  ["idée","idea","Sustantivos"],["besoin","necesidad","Sustantivos"],["raison","razón","Sustantivos"],["exemple","ejemplo","Sustantivos"],["partie","parte","Sustantivos"],
-  ["après","después","Tiempo"],["avant","antes","Tiempo"],["pendant","durante","Tiempo"],["depuis","desde","Tiempo"],["entre","entre","Función"],
-  ["sans","sin","Función"],["sous","debajo de","Función"],["chez","en casa de, donde","Función"],["vers","hacia","Función"],["contre","contra","Función"],
-  ["après","después","Tiempo"],["avant","antes","Tiempo"],["quand","cuando","Conector"],["comment","cómo","Interrogativos"],["pourquoi","por qué","Interrogativos"],
-  ["où","dónde","Interrogativos"],["quoi","qué","Interrogativos"],["combien","cuánto","Interrogativos"],["est-ce que","es que","Función"],["oui","sí","Básico"],
-  ["non","no","Básico"],["merci","gracias","Básico"],["bonjour","hola, buenos días","Básico"],["bonsoir","buenas tardes/noches","Básico"],["salut","hola, adiós","Básico"],
-  ["au revoir","adiós","Básico"],["s'il vous plaît","por favor","Básico"],["excusez-moi","perdone","Básico"],["pardon","perdón","Básico"],["bien sûr","por supuesto","Básico"],
-  ["peut-être","quizá","Adverbios"],["vraiment","realmente","Adverbios"],["presque","casi","Adverbios"],["seulement","solamente","Adverbios"],["ensemble","juntos","Adverbios"],
-  ["vite","rápido","Adverbios"],["tard","tarde","Tiempo"],["tôt","temprano","Tiempo"],["beaucoup","mucho","Adverbios"],["assez","bastante","Adverbios"],
-  ["falloir","hacer falta","Verbos"],["croire","creer","Verbos"],["sembler","parecer","Verbos"],["devenir","convertirse","Verbos"],["commencer","empezar","Verbos"],
-  ["finir","terminar","Verbos"],["jouer","jugar","Verbos"],["utiliser","utilizar","Verbos"],["essayer","intentar","Verbos"],["sentir","sentir","Verbos"],
-  ["suivre","seguir","Verbos"],["entendre","oír, entender","Verbos"],["écouter","escuchar","Verbos"],["apprendre","aprender","Verbos"],["enseigner","enseñar","Verbos"],
-  ["ouvrir","abrir","Verbos"],["fermer","cerrar","Verbos"],["acheter","comprar","Verbos"],["vendre","vender","Verbos"],["payer","pagar","Verbos"],
-  ["chercher","buscar","Verbos"],["attendre","esperar","Verbos"],["rendre","devolver, hacer","Verbos"],["perdre","perder","Verbos"],["gagner","ganar","Verbos"],
-  ["conduire","conducir","Verbos"],["dormir","dormir","Verbos"],["courir","correr","Verbos"],["marcher","caminar, funcionar","Verbos"],["montrer","mostrar","Verbos"],
-  ["apporter","traer","Verbos"],["raconter","contar","Verbos"],["décider","decidir","Verbos"],["changer","cambiar","Verbos"],["continuer","continuar","Verbos"],
-  ["important","importante","Adjetivos"],["possible","posible","Adjetivos"],["impossible","imposible","Adjetivos"],["facile","fácil","Adjetivos"],["difficile","difícil","Adjetivos"],
-  ["vrai","verdadero","Adjetivos"],["faux","falso","Adjetivos"],["seul","solo","Adjetivos"],["plein","lleno","Adjetivos"],["libre","libre","Adjetivos"],
-  ["fort","fuerte","Adjetivos"],["faible","débil","Adjetivos"],["propre","propio, limpio","Adjetivos"],["meilleur","mejor","Adjetivos"],["mieux","mejor","Adverbios"],
-  ["grandir","crecer","Verbos"],["venir de","acabar de","Verbos"],["être en train de","estar haciendo","Verbos"],["avoir besoin de","necesitar","Verbos"],["avoir envie de","tener ganas de","Verbos"]
-];
-
 function makeSeedWords() {
-  // The first V1 includes a representative core. The app supports importing a full 1000-word CSV.
-  // To keep the starter lightweight, repeated seed entries are removed.
-  const seen = new Set();
-  return seed.map((x, i) => ({id: "seed-"+i, word:x[0], translation:x[1], category:x[2], status:"new", recognition:0, production:0, repetitions:0, correct:0, incorrect:0, lastReview:null, nextReview:null}))
-    .filter(w => { if(seen.has(w.word)) return false; seen.add(w.word); return true; });
+  return seed.map((x, i) => ({
+    id: "core-" + i,
+    word: x[0],
+    translation: x[1],
+    category: x[2],
+    status: "new",
+    recognition: 0,
+    production: 0,
+    repetitions: 0,
+    correct: 0,
+    incorrect: 0,
+    lastReview: null,
+    nextReview: null
+  }));
 }
 
 function reqToPromise(req) {
@@ -93,17 +49,31 @@ async function initDB() {
   });
   const storedWords = await reqToPromise(db.transaction(WORD_STORE,"readonly").objectStore(WORD_STORE).getAll());
   const storedState = await reqToPromise(db.transaction(META_STORE,"readonly").objectStore(META_STORE).get("state"));
+  if (storedState?.value) state = storedState.value;
+
+  const currentDataset = state.datasetVersion || 1;
   if (!storedWords.length) {
     words = makeSeedWords();
+    state.datasetVersion = DATASET_VERSION;
     await saveAllWords();
-  } else words = storedWords;
-  if (storedState?.value) state = storedState.value;
+    await saveState();
+  } else if (currentDataset < DATASET_VERSION) {
+    // Replace the original starter vocabulary while keeping any words the user imported manually.
+    const userWords = storedWords.filter(w => !String(w.id).startsWith("seed-") && !String(w.id).startsWith("core-"));
+    words = [...makeSeedWords(), ...userWords];
+    state.datasetVersion = DATASET_VERSION;
+    await saveAllWords();
+    await saveState();
+  } else {
+    words = storedWords;
+  }
   updateUI();
 }
 
 async function saveAllWords() {
   const tx = db.transaction(WORD_STORE,"readwrite");
   const store = tx.objectStore(WORD_STORE);
+  store.clear();
   words.forEach(w => store.put(w));
   await new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
 }
@@ -158,11 +128,17 @@ function renderVocabulary() {
   document.getElementById("categoryFilters").innerHTML = cats.map(c=>`<button class="chip ${currentFilter===c?"active":""}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
   document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{currentFilter=b.dataset.cat;renderVocabulary();});
   const list = words.filter(w => (currentFilter==="Todas" || w.category===currentFilter) && (!q || `${w.word} ${w.translation}`.toLowerCase().includes(q)));
-  document.getElementById("vocabularyList").innerHTML = list.map(w=>`
-    <div class="word">
-      <div><strong>${escapeHtml(w.word)}</strong><small>${escapeHtml(w.translation)}</small></div>
-      <span class="status">${statusLabel(w.status)}</span>
-    </div>`).join("") || `<div class="card muted">No hay palabras que coincidan.</div>`;
+  document.getElementById("vocabularyList").innerHTML = list.map(w=>{
+    const attempts = (w.correct||0) + (w.incorrect||0);
+    const accuracy = attempts ? Math.round((w.correct||0) / attempts * 100) : 0;
+    return `<div class="word">
+      <div class="word-main">
+        <div><strong>${escapeHtml(w.word)}</strong><small>${escapeHtml(w.translation)}</small></div>
+        <div class="word-meta"><span class="status status-${escapeHtml(w.status)}">${statusLabel(w.status)}</span><span class="word-score">${w.correct||0}/${attempts}</span></div>
+      </div>
+      <div class="word-progress" title="${accuracy}% de acierto"><div style="width:${accuracy}%"></div></div>
+    </div>`;
+  }).join("") || `<div class="card muted">No hay palabras que coincidan.</div>`;
 }
 function statusLabel(s){ return ({new:"Nueva",learning:"Aprendiendo",familiar:"Familiar",mastered:"Dominada"})[s]||s; }
 function escapeHtml(x){ return String(x).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
@@ -217,6 +193,8 @@ async function answer(given, correct) {
   const isCorrect=normalize(given)===normalize(correct);
   w.repetitions++;
   if(isCorrect) w.correct++; else w.incorrect++;
+
+  document.querySelectorAll(".option, #checkAnswer").forEach(el => el.disabled = true);
   const now=new Date();
   if(isCorrect){
     w.status = w.repetitions>=5 ? "mastered" : w.repetitions>=2 ? "familiar" : "learning";
@@ -230,9 +208,12 @@ async function answer(given, correct) {
   w.lastReview=now.toISOString();
   await saveAllWords();
   const fb=document.getElementById("feedback");
+  fb.className = `feedback ${isCorrect ? "feedback-correct" : "feedback-wrong"}`;
   fb.classList.remove("hidden");
-  fb.innerHTML=isCorrect ? "✅ <strong>Correcto</strong>" : `❌ <strong>Incorrecto</strong><br>Respuesta: <b>${escapeHtml(correct)}</b>`;
-  setTimeout(()=>{currentIndex++;renderExercise();},900);
+  fb.innerHTML=isCorrect
+    ? `<span class="feedback-icon">✓</span><strong>Correcto</strong><small>${w.correct}/${w.correct+w.incorrect} aciertos</small>`
+    : `<span class="feedback-icon">✕</span><strong>Incorrecto</strong><small>Respuesta: <b>${escapeHtml(correct)}</b></small>`;
+  setTimeout(()=>{currentIndex++;renderExercise();},1000);
 }
 
 async function finishSession() {
@@ -281,8 +262,8 @@ async function importCSV(file){
   const text=await file.text();
   const lines=text.split(/\r?\n/).filter(Boolean);
   const header=lines.shift().split(",").map(x=>x.trim().toLowerCase());
-  const wi=header.indexOf("english")>=0?header.indexOf("english"):header.indexOf("francais")>=0?header.indexOf("francais"):0;
-  const ti=header.indexOf("spanish")>=0?header.indexOf("spanish"):header.indexOf("espanol")>=0?header.indexOf("espanol"):1;
+  const wi=header.indexOf("french")>=0?header.indexOf("french"):header.indexOf("francais")>=0?header.indexOf("francais"):header.indexOf("français")>=0?header.indexOf("français"):header.indexOf("english")>=0?header.indexOf("english"):0;
+  const ti=header.indexOf("spanish")>=0?header.indexOf("spanish"):header.indexOf("espanol")>=0?header.indexOf("espanol"):header.indexOf("español")>=0?header.indexOf("español"):1;
   const ci=header.indexOf("category");
   let added=0;
   for(const line of lines){
@@ -306,7 +287,7 @@ document.getElementById("csvInput").onchange=e=>e.target.files[0]&&importCSV(e.t
 document.getElementById("resetBtn").onclick=async()=>{
   if(confirm("¿Borrar todo el progreso? Tus palabras se conservarán.")){
     words.forEach(w=>{w.status="new";w.repetitions=0;w.correct=0;w.incorrect=0;w.lastReview=null;w.nextReview=null;});
-    state.sessions=[]; await saveAllWords();await saveState();updateUI();alert("Progreso borrado.");
+    state.sessions=[]; state.datasetVersion=DATASET_VERSION; await saveAllWords();await saveState();updateUI();renderVocabulary();alert("Progreso borrado.");
   }
 };
 
